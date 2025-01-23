@@ -1,131 +1,125 @@
 -- v14.1
-IF NOT EXISTS (SELECT * FROM sys.columns 
-               WHERE Name = N'Rank' AND Object_ID = Object_ID(N'FriendLink'))
+DO $$
 BEGIN
-    EXEC sp_executesql N'ALTER TABLE FriendLink ADD [Rank] INT'
-    EXEC sp_executesql N'UPDATE FriendLink SET [Rank] = 0'
-    EXEC sp_executesql N'ALTER TABLE FriendLink ALTER COLUMN [Rank] INT NOT NULL'
-END
+    IF NOT EXISTS (SELECT * FROM information_schema.columns 
+                   WHERE column_name = 'Rank' AND table_name = 'FriendLink') THEN
+        ALTER TABLE FriendLink ADD COLUMN "Rank" INT;
+        UPDATE FriendLink SET "Rank" = 0;
+        ALTER TABLE FriendLink ALTER COLUMN "Rank" SET NOT NULL;
+    END IF;
+END $$;
 
 -- v14.3
-IF NOT EXISTS (SELECT * FROM sys.objects 
-               WHERE object_id = OBJECT_ID(N'[dbo].[LoginHistory]') AND type in (N'U'))
+DO $$
 BEGIN
-    CREATE TABLE [dbo].[LoginHistory](
-        [Id] [int] IDENTITY(1,1) NOT NULL,
-        [LoginTimeUtc] [datetime] NOT NULL,
-        erAgent] [nvarcingerprint] [nv[PK_LoginHistory] PRIMARY KEY CLUSTERED 
-    (
-        [Id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-    ) ON [PRIMARY]
-END
+    IF NOT EXISTS (SELECT * FROM information_schema.tables 
+                   WHERE table_name = 'LoginHistory') THEN
+        CREATE TABLE "LoginHistory" (
+            "Id" SERIAL PRIMARY KEY,
+            "LoginTimeUtc" TIMESTAMP NOT NULL,
+            "erAgent" TEXT,
+            "fingerprint" TEXT
+        );
+    END IF;
+END $$;
 
-
-IF OBJECT_ID(N'[dbo].[LocalAccount]', 'U') IS NOT NULL
+DO $$
 BEGIN
-    DROP TABLE [dbo].[LocalAccount]
-END
+    IF EXISTS (SELECT * FROM information_schema.tables 
+               WHERE table_name = 'LocalAccount') THEN
+        DROP TABLE "LocalAccount";
+    END IF;
+END $$;
 
-
-IF EXISTS (SELECT * FROM sys.columns 
-           WHERE Name = N'RouteName' AND Object_ID = Object_ID(N'Catery'))
+DO $$
 BEGIN
-    EXEC sys.sp_rename 
-        @objname = N'Catery.RouteName', 
-        @newname = 'Slug', 
-        @objtype = 'COLUMN'
-END
+    IF EXISTS (SELECT * FROM information_schema.columns 
+               WHERE column_name = 'RouteName' AND table_name = 'Catery') THEN
+        ALTER TABLE Catery RENAME COLUMN "RouteName" TO "Slug";
+    END IF;
+END $$;
 
-
-IF EXISTS (
-    SELECT 1
-    FROM sys.columns c
-    JOIN sys.objects o ON c.object_id = o.object_id
-    WHERE o.name = 'Post' AND c.name = 'InlineCss'
-)
+DO $$
 BEGIN
-    ALTER TABLE Post DROP COLUMN InlineCss;
-END;
+    IF EXISTS (SELECT 1 
+               FROM information_schema.columns c
+               JOIN information_schema.tables t ON c.table_name = t.table_name
+               WHERE t.table_name = 'Post' AND c.column_name = 'InlineCss') THEN
+        ALTER TABLE Post DROP COLUMN "InlineCss";
+    END IF;
+END $$;
 
 -- v14.5
-IF EXISTS (SELECT * FROM sys.columns 
-           WHERE Name = N'IsOriginal' AND Object_ID = Object_ID(N'Post'))
+DO $$
 BEGIN
-    ALTER TABLE Post DROP COLUMN IsOriginal
-END
+    IF EXISTS (SELECT * FROM information_schema.columns 
+               WHERE column_name = 'IsOriginal' AND table_name = 'Post') THEN
+        ALTER TABLE Post DROP COLUMN "IsOriginal";
+    END IF;
+END $$;
 
-
-IF EXISTS (SELECT * FROM sys.columns 
-           WHERE Name = N'OriginLink' AND Object_ID = Object_ID(N'Post'))
+DO $$
 BEGIN
-    ALTER TABLE Post DROP COLUMN OriginLink
-END
+    IF EXISTS (SELECT * FROM information_schema.columns 
+               WHERE column_name = 'OriginLink' AND table_name = 'Post') THEN
+        ALTER TABLE Post DROP COLUMN "OriginLink";
+    END IF;
+END $$;
 
-
-IF OBJECT_ID(N'Mention', 'U') IS NULL AND OBJECT_ID(N'Pingback', 'U') IS NOT NULL
+DO $$
 BEGIN
-    EXEC sp_rename 'Pingback', 'Mention'
-END
+    IF NOT EXISTS (SELECT * FROM information_schema.tables 
+                   WHERE table_name = 'Mention') AND 
+       EXISTS (SELECT * FROM information_schema.tables 
+               WHERE table_name = 'Pingback') THEN
+        ALTER TABLE Pingback RENAME TO Mention;
+    END IF;
+END $$;
 
-
-IF NOT EXISTS (SELECT * FROM sys.columns 
-               WHERE Name = N'Worker' AND Object_ID = Object_ID(N'Mention'))
+DO $$
 BEGIN
-    EXEC sp_executesql N'ALTER TABLE Mention ADD Worker NVARCHAR(16)'
-    EXEC sp_executesql N'UPDATE Mention SET Worker = N''Pingback'''
-END
+    IF NOT EXISTS (SELECT * FROM information_schema.columns 
+                   WHERE column_name = 'Worker' AND table_name = 'Mention') THEN
+        ALTER TABLE Mention ADD COLUMN "Worker" VARCHAR(16);
+        UPDATE Mention SET "Worker" = 'Pingback';
+    END IF;
+END $$;
 
 -- v14.8
-IF NOT EXISTS (SELECT * FROM sys.columns 
-               WHERE Name = N'RouteLink' AND Object_ID = Object_ID(N'Post'))
+DO $$
 BEGIN
-    EXEC sp_executesql N'ALTER TABLE Post ADD RouteLink NVARCHAR(256)'
-    EXEC sp_executesql N'UPDATE Post SET RouteLink = FORMAT(PubDateUtc, ''yyyy/M/d'') + ''/'' + Slug'
-END
+    IF NOT EXISTS (SELECT * FROM information_schema.columns 
+                   WHERE column_name = 'RouteLink' AND table_name = 'Post') THEN
+        ALTER TABLE Post ADD COLUMN "RouteLink" VARCHAR(256);
+        UPDATE Post SET "RouteLink" = TO_CHAR("PubDateUtc", 'YYYY/M/D') || '/' || "Slug";
+    END IF;
+END $$;
 
-IF EXISTS (
-    SELECT 1
-    FROM sys.columns c
-    JOIN sys.objects o ON c.object_id = o.object_id
-    WHERE o.name = 'Post' AND c.name = 'HashCheckSum'
-)
+DO $$
 BEGIN
-    ALTER TABLE Post DROP COLUMN HashCheckSum;
-END
+    IF EXISTS (SELECT 1 
+               FROM information_schema.columns c
+               JOIN information_schema.tables t ON c.table_name = t.table_name
+               WHERE t.table_name = 'Post' AND c.column_name = 'HashCheckSum') THEN
+        ALTER TABLE Post DROP COLUMN "HashCheckSum";
+    END IF;
+END $$;
 
 -- v14.15
-UPDATE [BlogConfiguration] SET CfgKey = 'AppearanceSettings' WHERE CfgKey = 'CustomStyleSheetSettings';
-
-ALTER TABLE [dbo].[BlogConfiguration] ALTER COLUMN [CfgKey] VARCHAR(64) NOT NULL;
-
-IF EXISTS (
-    SELECT 1
-    FROM sys.objects
-    WHERE object_id = OBJECT_ID(N'[PK_BlogConfiguration]')
-          AND type = 'PK'
-)
+DO $$
 BEGIN
-    ALTER TABLE [dbo].[BlogConfiguration] DROP CONSTRAINT [PK_BlogConfiguration];
-END
-
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.key_constraints kc
-    INNER JOIN sys.tables t ON kc.parent_object_id = t.object_id
-    WHERE kc.type = 'PK'
-      AND t.name = 'BlogConfiguration'
-)
-BEGIN
-    ALTER TABLE [dbo].[BlogConfiguration] ADD CONSTRAINT [PK_BlogConfiguration_CfgKey] PRIMARY KEY CLUSTERED ([CfgKey] ASC);
-END
-
-IF EXISTS (
-    SELECT 1
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'BlogConfiguration'
-      AND COLUMN_NAME = 'Id'
-)
-BEGIN
-    ALTER TABLE [dbo].[BlogConfiguration] DROP COLUMN Id;
-END
+    UPDATE "BlogConfiguration" SET "CfgKey" = 'AppearanceSettings' WHERE "CfgKey" = 'CustomStyleSheetSettings';
+    ALTER TABLE "BlogConfiguration" ALTER COLUMN "CfgKey" SET NOT NULL;
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'PK_BlogConfiguration') THEN
+        ALTER TABLE "BlogConfiguration" DROP CONSTRAINT "PK_BlogConfiguration";
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint 
+                   WHERE conname = 'PK_BlogConfiguration_CfgKey' 
+                   AND conrelid = 'BlogConfiguration'::regclass) THEN
+        ALTER TABLE "BlogConfiguration" ADD CONSTRAINT "PK_BlogConfiguration_CfgKey" PRIMARY KEY ("CfgKey");
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'BlogConfiguration' AND column_name = 'Id') THEN
+        ALTER TABLE "BlogConfiguration" DROP COLUMN "Id";
+    END IF;
+END $$;
