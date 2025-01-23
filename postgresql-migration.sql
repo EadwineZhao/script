@@ -1,3 +1,4 @@
+-- v14.1
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.columns 
@@ -8,6 +9,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.3
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.tables 
@@ -29,6 +31,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.4
 DO $$
 BEGIN
     IF EXISTS (SELECT * FROM information_schema.columns 
@@ -37,6 +40,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.5
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 
@@ -63,6 +67,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.6
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.tables 
@@ -73,6 +78,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.7
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.columns 
@@ -82,6 +88,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.8
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT * FROM information_schema.columns 
@@ -101,6 +108,7 @@ BEGIN
     END IF;
 END $$;
 
+-- v14.15
 DO $$
 BEGIN
     UPDATE "BlogConfiguration" SET "CfgKey" = 'AppearanceSettings' WHERE "CfgKey" = 'CustomStyleSheetSettings';
